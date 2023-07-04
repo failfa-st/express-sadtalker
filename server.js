@@ -46,7 +46,7 @@ async function generate({ audio, image, batchSize = 2 }) {
       batchSize
   ].join(' ');
 
-  const command = condaPython('sadtalker', `${pythonScript} ${args}`);
+  const command = condaPython('expresssadtalker', `${pythonScript} ${args}`);
 
   try {
       const result = await execa(command, {shell: true});
