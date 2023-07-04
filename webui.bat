@@ -10,7 +10,7 @@ call .\venv\Scripts\activate.bat
 set PYTHON="venv\Scripts\Python.exe"
 echo venv %PYTHON%
 
-%PYTHON% launcher.py
+%PYTHON% Launcher.py
 
 echo.
 echo Launch unsuccessful. Exiting.
