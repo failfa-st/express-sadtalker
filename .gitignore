@@ -170,3 +170,5 @@ start.sh
 
 # Mac
 .DS_Store
+
+node_modules
