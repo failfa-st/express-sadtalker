@@ -4,6 +4,7 @@ import express from "express";
 import { execa } from "execa";
 const app = express();
 import { config } from "dotenv";
+import { condaPython } from "./utils.js";
 
 config();
 
@@ -19,10 +20,6 @@ app.get("/files/:fileName", async (request, response) => {
   console.log(request.params);
   response.send(`<video controls src="/uploads/${request.params.fileName}"/>`);
 });
-const PYTHON = path.join(process.cwd(), "venv/Scripts/python.exe");
-
-// Activate venv
-await execa(path.join(process.cwd(), "venv/Scripts/activate.bat"));
 
 /**
  * @typedef GenerateObject
@@ -39,39 +36,41 @@ await execa(path.join(process.cwd(), "venv/Scripts/activate.bat"));
  * @returns {Promise<GenerateObject>}
  */
 async function generate({ audio, image, batchSize = 2 }) {
+  const pythonScript = "inference.py";
   const args = [
-    "inference.py",
-    "--driven_audio",
-    audio,
-    "--source_image",
-    image,
-    "--batch_size",
-    batchSize,
-  ];
-  //
+      "--driven_audio",
+      audio,
+      "--source_image",
+      image,
+      "--batch_size",
+      batchSize
+  ].join(' ');
+
+  const command = condaPython('sadtalker', `${pythonScript} ${args}`);
 
   try {
-    const result = await execa(PYTHON, args);
+      const result = await execa(command, {shell: true});
 
-    console.log(result.stdout);
-    console.log(result.stderr);
-    const parts = result.stdout.split("\n");
-    const relativePath = parts[3]
-      .replace("The generated video is named:", "")
-      .trim();
-    const filePath = path.join(process.cwd(), relativePath);
-    const fileName = relativePath.replace("./results\\", "");
-    return {
-      filePath,
-      fileName,
-      download: `http://127.0.0.1:${port}/uploads/${fileName}`,
-      browser: `http://127.0.0.1:${port}/files/${fileName}`,
-    };
+      console.log(result.stdout);
+      console.log(result.stderr);
+      const parts = result.stdout.split("\n");
+      const relativePath = parts[3]
+          .replace("The generated video is named:", "")
+          .trim();
+      const filePath = path.join(process.cwd(), relativePath);
+      const fileName = relativePath.replace("./results\\", "");
+      return {
+          filePath,
+          fileName,
+          download: `http://127.0.0.1:${port}/uploads/${fileName}`,
+          browser: `http://127.0.0.1:${port}/files/${fileName}`
+      };
   } catch (error) {
-    console.log(error);
-    throw error;
+      console.log(error);
+      throw error;
   }
 }
+
 
 app.post("/generate", async (request, response) => {
   const { audio, image, batchSize } = request.body;
@@ -85,6 +84,5 @@ app.post("/generate", async (request, response) => {
 });
 
 app.listen(port, async () => {
-  await execa("venv/Scripts/activate.bat");
   console.log(`Server is running on port ${port}`);
 });
