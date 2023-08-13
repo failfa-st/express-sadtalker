@@ -8,7 +8,15 @@ import { condaPython } from "./utils.js";
 
 config();
 
-const port = process.env.PORT || 3000;
+const portArgIndex = process.argv.indexOf('--port');
+let currentPort = 3000;
+
+if (portArgIndex !== -1 && process.argv.length > portArgIndex + 1) {
+  const parsedPort = parseInt(process.argv[portArgIndex + 1], 10);
+  if (!isNaN(parsedPort)) {
+    currentPort = parsedPort;
+  }
+}
 
 app.use(express.json());
 
@@ -62,8 +70,8 @@ async function generate({ audio, image, batchSize = 2 }) {
       return {
           filePath,
           fileName,
-          download: `http://127.0.0.1:${port}/uploads/${fileName}`,
-          browser: `http://127.0.0.1:${port}/files/${fileName}`
+          download: `http://127.0.0.1:${currentPort}/uploads/${fileName}`,
+          browser: `http://127.0.0.1:${currentPort}/files/${fileName}`
       };
   } catch (error) {
       console.log(error);
@@ -83,6 +91,6 @@ app.post("/generate", async (request, response) => {
   }
 });
 
-app.listen(port, async () => {
-  console.log(`Server is running on port ${port}`);
+app.listen(currentPort, async () => {
+  console.log(`Server is running on port ${currentPort}`);
 });
